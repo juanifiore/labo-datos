@@ -84,6 +84,7 @@ def geringoso(palabra):
                 if palabra[i] == vocales[j]:
                     papalapabrapa += silaba[j]
     return papalapabrapa
+    
 
 def dicc_geringoso(palabras):
     diccionario = {}
@@ -99,4 +100,11 @@ def generala(n):
     return tirada
 
 
+def generar_diccionario():
+    with open("listado-general.txt",'rt') as file:
+        lista_palabras = file.read()
+    lista = lista_palabras.split('\n')
+    dicc = dicc_geringoso(lista)
+    return dicc
 
+    
