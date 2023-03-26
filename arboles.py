@@ -47,7 +47,7 @@ def especies(lista_arboles):
 
 def contar_ejemplares(lista_arboles):
     diccionario_ejemplares = {}
-    conjunto_especies = especies(lista_arboles)     # usamos la funcion especies() para armar un conjunto con todas las especies de la lista
+    especies_no_contadas = especies(lista_arboles)     # usamos la funcion especies() para armar un conjunto con todas las especies de la lista
     for diccionario in lista_arboles:
         especie_a_contar = diccionario['nombre_com']        # recorremos los diccionarios en la lista
         if diccionario['nombre_com'] in conjunto_especies:      # verificamos que la especie del arbol actual este en el conjunto
