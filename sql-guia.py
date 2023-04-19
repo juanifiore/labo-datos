@@ -2,6 +2,11 @@
 Guia sql, Laboratorio de datos
 Tema dengue
 Juan Igacio Fiore 259/22
+INDICE:
+    1: 30
+    2: 320
+    3: 445
+    4: 490
 '''
 
 from inline_sql import sql
@@ -477,6 +482,122 @@ def main():
                       '''
 
         imprimirEjercicio(consigna,[casos,tipoevento],consultaSQL)
+
+
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4a':
+
+        '''EJERCICCIO 4A'''
+
+        consigna = 'Calcular la cantidad total de casos que hay en la tabla casos.'
+
+        consultaSQL = '''
+                        SELECT DISTINCT COUNT(*) AS cantidad_total_de_casos
+                        FROM casos
+                      '''
+
+        imprimirEjercicio(consigna,[casos],consultaSQL)
+
+
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4b':
+
+        '''EJERCICCIO 4B'''
+
+        consigna = 'Calcular la cantidad total de casos que hay en la tabla casos para cada año y cada tipo de caso. Presentar la información de la siguiente manera: descripción del tipo de caso, año y cantidad. Ordenarlo por tipo de caso (ascendente) y año (ascendente).'
+
+        consultaSQL = '''
+                        SELECT tipoevento.descripcion, casos.anio, COUNT(*) AS cantidad_total
+                        FROM casos, tipoevento
+                        WHERE tipoevento.id = casos.id_tipoevento
+                        GROUP BY descripcion, anio
+                        ORDER BY descripcion ASC, anio ASC
+                      '''
+
+        imprimirEjercicio(consigna,[casos, tipoevento],consultaSQL)
+
+
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4c':
+
+        '''EJERCICCIO 4C'''
+
+        consigna = 'Idem anterior solo año 2019'
+
+        consultaSQL = '''
+                        SELECT tipoevento.descripcion, casos.anio, COUNT(*) AS cantidad_total
+                        FROM casos, tipoevento
+                        WHERE tipoevento.id = casos.id_tipoevento AND anio = '2019'
+                        GROUP BY descripcion, anio
+                        ORDER BY descripcion ASC, anio ASC
+                      '''
+
+        imprimirEjercicio(consigna,[casos, tipoevento],consultaSQL)
+
+
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4d':
+
+        '''EJERCICCIO 4D'''
+
+        consigna = 'Calcular la cantidad total de departamentos que hay por provincia. Presentar la información ordenada por código de provincia.'
+
+        consultaSQL = '''
+                        SELECT provincia.id, provincia.descripcion, count(*) AS cantidad_departamentos
+                        FROM departamento
+                        INNER JOIN provincia ON provincia.id = departamento.id_provincia
+                        GROUP BY provincia.descripcion, provincia.id
+                        ORDER BY provincia.id DESC
+                      '''
+
+        imprimirEjercicio(consigna,[provincia, departamento],consultaSQL)
+
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4e':
+
+        '''EJERCICCIO 4E'''
+
+        consigna = 'Departamentos con menor cantidad de casos en 2019'
+
+        consultaSQL = '''
+                        SELECT DISTINCT departamento.descripcion AS departamento, count(*) AS cantidad_de_Casos
+                        FROM departamento
+                        INNER JOIN casos ON casos.id_depto = departamento.id
+                        WHERE cantidad_de_Casos = MIN(cantidad_de_Casos)
+                        GROUP BY departamento.descripcion
+                        ORDER BY cantidad_de_Casos ASC
+                      '''
+
+        imprimirEjercicio(consigna,[casos, departamento],consultaSQL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
