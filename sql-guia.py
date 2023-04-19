@@ -17,12 +17,10 @@ def main():
 
     '''ARMO LOS CSV'''
     #ruta = '/home/juani/Documentos/Facultad/3 LABORATORIO DE DATOS/labo-datos/csv'
-    ruta = './csv'
-    casos = pd.read_csv(os.path.join(ruta,'casos.csv'))
-    tipoevento = pd.read_csv(os.path.join(ruta,'tipoevento.csv'))
-    departamento = pd.read_csv(os.path.join(ruta,'departamento.csv'))
-    provincia = pd.read_csv(os.path.join(ruta,'provincia.csv'))
-    grupoetario = pd.read_csv(os.path.join(ruta,'grupoetario.csv'))
+    ruta = './csv/dengue/'
+
+    leer_csv(ruta) # uso la funcion leer_csv para declarar los csv:
+                   # casos, provincia, departamento, tipoevento, grupoetario 
 
     ''' ENTRADA PARA ELEGIR EJERCICIO A IMPRIMIR '''
 
@@ -635,34 +633,41 @@ def main():
         consigna = 'promedio de casos por provincia y por año'
 
         consultaSQL = '''
-                        SELECT DISTINCT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
+                        SELECT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
                         FROM provincia, departamento, casos
                         WHERE departamento.id_provincia = provincia.id AND casos.id_depto = departamento.id AND anio = '2019'
                       '''
 
-        p_cant_2019 = sql^ consultaSQL
+        p_cant_2019 = sql^ consultaSQL # en cada caso del año 2019, arma en df con la provincia y la cantidad de casos 
+                                       # (en el df casos.csv cada caso reportado tiene su cantidad asignada)
+                                       # como puede haber tuplas en casos.csv que coincidan en cantidad y provincia, se deben tomar los 
+                                       # repetidos igual para luego sumarlos y sacar promedio
 
         consultaSQL2 = '''
-                        SELECT DISTINCT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
+                        SELECT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
                         FROM provincia, departamento, casos
                         WHERE departamento.id_provincia = provincia.id AND casos.id_depto = departamento.id AND anio = '2020'
                       '''
 
-        p_cant_2020 = sql^ consultaSQL2
+        p_cant_2020 = sql^ consultaSQL2 # idem p_cant_2019
 
         consultaSQL1 = '''
                         SELECT DISTINCT provincia, AVG(p_cant_2019.cantidad) AS promedio_casos_2019
                         FROM p_cant_2019 
                         GROUP BY provincia
                         '''
-        result_2019 = sql^ consultaSQL1
+        result_2019 = sql^ consultaSQL1 # armo un df con la provincia y el promedio de casos por cada semana 
+                                        # ..epidemiologica del año 2019
 
         consultaSQL4 = '''
                         SELECT DISTINCT provincia, AVG(p_cant_2020.cantidad) AS promedio_casos_2020
                         FROM p_cant_2020
                         GROUP BY provincia
                         '''
-        result_2020 = sql^ consultaSQL4
+        result_2020 = sql^ consultaSQL4 # idem result_2019
+
+        #ahora hago un RIGHT OUTER JOIN para unir result_2019 y result_2020 junto con sus respectiva provincias, 
+        # el RIGHT OUTER JOIN es porque en el 2019 no hay reportes de todas las provincias
 
         consultaSQL3 = '''
                         SELECT DISTINCT result_2020.provincia, promedio_casos_2019, promedio_casos_2020
@@ -671,12 +676,85 @@ def main():
                         '''
                         
 
-        imprimirEjercicio(consigna,[casos,departamento,provincia],consultaSQL3)
+        imprimirEjercicio(consigna,[casos,departamento,provincia,p_cant_2019,p_cant_2020, result_2019, result_2020],consultaSQL3)
 
 
 #-------------------------------------------------------------------------------------
 
     if entrada == '4h': 
+
+        consigna : 'Listar, para cada provincia y año, cuáles fueron los departamentos que más cantidad de casos tuvieron.'
+
+        # armo df para el año asignado a la variable 'año' la suma de los casos para cada departamento
+
+        año = '2019'
+        
+        cant_casos_depto_2019 = sql^ '''
+                                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos_total_2019
+                                        FROM departamento
+                                        INNER JOIN casos ON casos.id_depto = departamento.id
+                                        WHERE anio = $año
+                                        GROUP BY departamento.descripcion
+                                    '''
+        # LE AGREGO LA PROVINCIA A CADA DEPTO
+        cant_casos_depto_2019_prov = sql^ '''
+                                                SELECT provincia.descripcion AS provincia, c19.*
+                                                FROM cant_casos_depto_2019 AS c19
+                                                INNER JOIN departamento ON c19.departamento = departamento.descripcion
+                                                INNER JOIN provincia ON provincia.id = departamento.id_provincia
+                                            '''
+
+        
+        año = '2020'
+        
+        cant_casos_depto_2020= sql^ '''
+                                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos_total_2020
+                                        FROM departamento
+                                        INNER JOIN casos ON casos.id_depto = departamento.id
+                                        WHERE anio = $año
+                                        GROUP BY departamento.descripcion
+                                    '''
+
+        # LE AGREGO LA PROVINCIA A CADA DEPTO
+        cant_casos_depto_2020_prov = sql^ '''
+                                                SELECT provincia.descripcion AS provincia, c20.*
+                                                FROM cant_casos_depto_2020 AS c20 
+                                                INNER JOIN departamento ON c20.departamento = departamento.descripcion
+                                                INNER JOIN provincia ON provincia.id = departamento.id_provincia
+                                            '''
+
+
+        # ARMO LA LISTA PARA CADA AÑO POR SEPARADO CON LA PROVINCIA Y EL DEPTO CON MAS CASOS DE ESE AÑO
+
+        depto_con_mas_casos_provincia_2019 = sql^ '''
+                                                SELECT provincia, departamento, MAX(cantidad_de_casos_total_2019) AS cantidad_casos
+                                                FROM cant_casos_depto_2019_prov 
+                                                GROUP BY provincia, departamento 
+                                                '''
+        print(depto_con_mas_casos_provincia_2019)
+
+
+
+
+
+
+
+
+
+
+        # ESTA MAL NO ME SIRVE LO QUE HAGO ACA ABAJO
+        # armo df uniendo los df de 2019 y 2020, dejando nulls en los deptos que tengan casos en 2020 pero no en 2019
+
+        cant_casos_depto_2019_2020 = sql^ ''' 
+                                            SELECT c19.departamento, 
+                                            c19.cantidad_de_casos_total_2019, 
+                                            c20.cantidad_de_casos_total_2020 
+                                            FROM cant_casos_depto_2019 AS c19
+                                            RIGHT OUTER JOIN cant_casos_depto_2020 AS c20
+                                            ON c19.departamento = c20.departamento
+                                            '''
+                    
+
 
 
 
@@ -727,8 +805,18 @@ def imprimirEjercicio(consigna, listaDeDataframesDeEntrada, consultaSQL):
     print()
 
 
+#=============================================================================================
+# FUNCION PARA LEER CADA ARCHIVO CSV DEL DIRECTORIO ASIGNADO
+#=============================================================================================
 
-                    
+def leer_csv(ruta):
+    archivos = os.listdir(ruta)     # creo una lista con los archivos del directorio actual
+    for csv in archivos:
+        if csv.endswith('.csv'):    # me quedo solo con los que tienen extension .csv
+            nombre_variable = csv.split('.')[0]     # declaro la variable sin la extension csv
+            nombre_archivo = os.path.join(ruta,csv)     # armo la ruta completa al archivo
+            globals()[nombre_variable] = pd.read_csv(nombre_archivo)    # agrego la variable con el DataFrame del csv a las variables del programa
+
         
 
 
