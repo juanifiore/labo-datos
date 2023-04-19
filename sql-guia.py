@@ -575,17 +575,108 @@ def main():
         consigna = 'Departamentos con menor cantidad de casos en 2019'
 
         consultaSQL = '''
-                        SELECT DISTINCT departamento.descripcion AS departamento, count(*) AS cantidad_de_Casos
+                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos
                         FROM departamento
                         INNER JOIN casos ON casos.id_depto = departamento.id
-                        WHERE cantidad_de_Casos = MIN(cantidad_de_Casos)
+                        WHERE anio = '2019'
                         GROUP BY departamento.descripcion
                         ORDER BY cantidad_de_Casos ASC
                       '''
+        cantidad_de_casos_depto = sql^ consultaSQL
 
-        imprimirEjercicio(consigna,[casos, departamento],consultaSQL)
+        consulta1SQL = '''
+                        SELECT DISTINCT departamento
+                        FROM cantidad_de_casos_depto AS cdc
+                        WHERE cantidad_de_casos <= ALL (SELECT MIN(cdc.cantidad_de_casos)
+                                                        FROM cantidad_de_casos_depto AS cdc
+                                                        )
+                       '''
+
+        imprimirEjercicio(consigna,[casos, departamento, cantidad_de_casos_depto],consulta1SQL)
 
 
+
+#-------------------------------------------------------------------------------------
+
+
+    if entrada == '4f':
+
+        '''EJERCICCIO 4F'''
+
+        consigna = 'Departamentos con mayor cantidad de casos en 2020'
+
+        consultaSQL = '''
+                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos
+                        FROM departamento
+                        INNER JOIN casos ON casos.id_depto = departamento.id
+                        WHERE anio = '2020'
+                        GROUP BY departamento.descripcion
+                        ORDER BY cantidad_de_Casos ASC
+                      '''
+        cantidad_de_casos_depto = sql^ consultaSQL
+
+        consulta1SQL = '''
+                        SELECT DISTINCT departamento
+                        FROM cantidad_de_casos_depto AS cdc
+                        WHERE cantidad_de_casos >= ALL (SELECT MAX(cdc.cantidad_de_casos)
+                                                        FROM cantidad_de_casos_depto AS cdc
+                                                        )
+                       '''
+
+        imprimirEjercicio(consigna,[casos, departamento, cantidad_de_casos_depto],consulta1SQL)
+
+
+#-------------------------------------------------------------------------------------
+
+    if entrada == '4g':
+         
+        '''EJERCICIO 4G'''
+
+        consigna = 'promedio de casos por provincia y por año'
+
+        consultaSQL = '''
+                        SELECT DISTINCT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
+                        FROM provincia, departamento, casos
+                        WHERE departamento.id_provincia = provincia.id AND casos.id_depto = departamento.id AND anio = '2019'
+                      '''
+
+        p_cant_2019 = sql^ consultaSQL
+
+        consultaSQL2 = '''
+                        SELECT DISTINCT provincia.descripcion AS provincia, casos.cantidad  AS cantidad
+                        FROM provincia, departamento, casos
+                        WHERE departamento.id_provincia = provincia.id AND casos.id_depto = departamento.id AND anio = '2020'
+                      '''
+
+        p_cant_2020 = sql^ consultaSQL2
+
+        consultaSQL1 = '''
+                        SELECT DISTINCT provincia, AVG(p_cant_2019.cantidad) AS promedio_casos_2019
+                        FROM p_cant_2019 
+                        GROUP BY provincia
+                        '''
+        result_2019 = sql^ consultaSQL1
+
+        consultaSQL4 = '''
+                        SELECT DISTINCT provincia, AVG(p_cant_2020.cantidad) AS promedio_casos_2020
+                        FROM p_cant_2020
+                        GROUP BY provincia
+                        '''
+        result_2020 = sql^ consultaSQL4
+
+        consultaSQL3 = '''
+                        SELECT DISTINCT result_2020.provincia, promedio_casos_2019, promedio_casos_2020
+                        FROM result_2019
+                        RIGHT OUTER JOIN result_2020 ON result_2019.provincia = result_2020.provincia
+                        '''
+                        
+
+        imprimirEjercicio(consigna,[casos,departamento,provincia],consultaSQL3)
+
+
+#-------------------------------------------------------------------------------------
+
+    if entrada == '4h': 
 
 
 
