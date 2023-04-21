@@ -50,6 +50,7 @@ v2 = [-3, 0.1]
 v3 = [3, -3.1]
 v4 = [-3, -3.1]
 #plt.plot(rectangulo_x(v1,v2,v3,v4),rectangulo_y(v1,v2,v3,v4))
+plt.title('feliz cumple (es una torta)')
 plt.fill(rectangulo_x(v1,v2,v3,v4),rectangulo_y(v1,v2,v3,v4),'yellow')
 
 
@@ -57,7 +58,6 @@ plt.plot(x_tapa_media,y_tapa_media, color='blue',label='dale boca')
 
 plt.fill(x_tapa_superior, y_tapa_superior, color='blue')
 
-#velitas
 l = np.linspace(2,-2,38)
 i = 0
 while i < 38:
@@ -76,7 +76,6 @@ while i < 38:
 #v4 = [1.8, 0]
 #plt.fill(rectangulo_x(v1,v2,v3,v4),rectangulo_y(v1,v2,v3,v4),'yellow')
 
-plt.title('feliz cumple (es una torta)')
 plt.legend(loc='upper left')
 plt.axis([-5,5,-5,5])
 plt.show()
