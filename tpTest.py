@@ -96,23 +96,31 @@ autovalores_D = estado(D,v,k)
 iteraciones = np.linspace(1,100,k)
 
 plt.subplot(2, 2, 1)
-plt.plot(np.log10(iteraciones),autovalores_A,color="black", linewidth=1.0, linestyle="-",label="matrizA")
-plt.legend(loc='upper left')
+plt.plot(iteraciones,autovalores_A,color="black", linewidth=1.0, linestyle="-",label="matrizA")
+plt.legend(loc='lower right')
 plt.title('matriz A')
+#plt.axis([0,k,np.ma.masked_invalid(autovalores_A).min(),np.ma.masked_invalid(autovalores_A).max()])
 
 plt.subplot(2, 2, 2)
 plt.plot(iteraciones,autovalores_B,color="blue", linewidth=1.0, linestyle="-",label="matrizB")
-plt.legend(loc='upper left')
+plt.legend(loc='lower right')
 plt.title('matriz B')
+#plt.axis([0,k,np.ma.masked_invalid(autovalores_B).min(),np.ma.masked_invalid(autovalores_B).max()])
 
 plt.subplot(2, 2, 3)
-plt.plot(iteraciones,autovalores_C,color="green", linewidth=1.0, linestyle="-")
+plt.plot(iteraciones,autovalores_C,color="green", linewidth=1.0, linestyle="-",label="matrizB")
+plt.legend(loc='lower right')
 plt.title('matriz C')
+#plt.axis([0,k,np.ma.masked_invalid(autovalores_C).min(),np.ma.masked_invalid(autovalores_C).max()])
 
 plt.subplot(2, 2, 4)
-plt.plot(np.log(iteraciones),autovalores_D,color="red", linewidth=1.0, linestyle="-")
+plt.plot(iteraciones,autovalores_D,color="red", linewidth=1.0, linestyle="-",label="matrizB")
+plt.legend(loc='lower right')
 plt.title('matriz D')
-plt.axis([0,100,autovalores_D[0],autovalores_D[40]])
+#plt.axis([0,k,np.ma.masked_invalid(autovalores_D).min(),np.ma.masked_invalid(autovalores_D).max()])
+
+
+#plt.xscale('log')
 plt.show()
 
 
