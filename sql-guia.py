@@ -683,84 +683,94 @@ def main():
 
     if entrada == '4h': 
 
-        consigna : 'Listar, para cada provincia y año, cuáles fueron los departamentos que más cantidad de casos tuvieron.'
+        consigna = 'Listar, para cada provincia y año, cuáles fueron los departamentos que más cantidad de casos tuvieron.'
 
-        # armo df para el año asignado a la variable 'año' la suma de los casos para cada departamento
 
-        año = '2019'
+        consultaSQL = '''
+                        SELECT p.descripcion AS Provincia, c.anio AS Año, c.depto AS Despartamento, c.max_casos AS cant_casos
+                        FROM    (SELECT d.id_provincia, anio, ANY_VALUE(d.descripcion) AS depto,  MAX(cantidad) AS max_casos
+                                FROM casos
+                                INNER JOIN departamento d ON casos.id_depto = d.id
+                                GROUP BY id_provincia, anio) c
+                        INNER JOIN provincia p ON c.id_provincia = p.id 
+                       
+                        '''
+
+        consultaSQL1 = '''
+                        SELECT p.descripcion AS provincia, c.anio AS Año, d.descripcion AS departamento, c.max_casos
+                        FROM (
+                            SELECT id_provincia, anio, id_depto, MAX(cantidad) AS max_casos
+                            FROM casos
+                            JOIN departamento ON casos.id_depto = departamento.id
+                            GROUP BY id_provincia, anio
+                            ) c
+                            JOIN provincia p ON p.id = c.id_provincia
+                            JOIN departamento d ON d.id = c.id_depto
+                            '''
+
+        consultaSQL2 = '''
+        SELECT p.descripcion as provincia, c.anio AS año, d.descripcion AS departamento, MAX(c.cantidad) as cantidad
+FROM casos c
+JOIN departamento d ON c.id_depto = d.id
+JOIN provincia p ON d.id_provincia = p.id
+GROUP BY p.descripcion, c.anio, d.descripcion, MAX(c.cantidad)
+HAVING MAX(c.cantidad) = c.cantidad;
+
+                            '''
+
         
-        cant_casos_depto_2019 = sql^ '''
-                                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos_total_2019
-                                        FROM departamento
-                                        INNER JOIN casos ON casos.id_depto = departamento.id
-                                        WHERE anio = $año
-                                        GROUP BY departamento.descripcion
-                                    '''
-        # LE AGREGO LA PROVINCIA A CADA DEPTO
-        cant_casos_depto_2019_prov = sql^ '''
-                                                SELECT provincia.descripcion AS provincia, c19.*
-                                                FROM cant_casos_depto_2019 AS c19
-                                                INNER JOIN departamento ON c19.departamento = departamento.descripcion
-                                                INNER JOIN provincia ON provincia.id = departamento.id_provincia
-                                            '''
+        imprimirEjercicio(consigna, [departamento, casos, provincia], consultaSQL2)
 
-        
-        año = '2020'
-        
-        cant_casos_depto_2020= sql^ '''
-                                        SELECT DISTINCT departamento.descripcion AS departamento, sum(cantidad) AS cantidad_de_casos_total_2020
-                                        FROM departamento
-                                        INNER JOIN casos ON casos.id_depto = departamento.id
-                                        WHERE anio = $año
-                                        GROUP BY departamento.descripcion
-                                    '''
+ 
+#-------------------------------------------------------------------------------------
 
-        # LE AGREGO LA PROVINCIA A CADA DEPTO
-        cant_casos_depto_2020_prov = sql^ '''
-                                                SELECT provincia.descripcion AS provincia, c20.*
-                                                FROM cant_casos_depto_2020 AS c20 
-                                                INNER JOIN departamento ON c20.departamento = departamento.descripcion
-                                                INNER JOIN provincia ON provincia.id = departamento.id_provincia
-                                            '''
+    if entrada == '4i':
+
+        consigna = 'Mostrar la cantidad de casos total, máxima, mínima y promedio que tuvo la provincia de Buenos Aires en el año 2019.'
+
+        consultaSQL = '''
+                        SELECT p.descripcion AS Provincia, SUM(c.cantidad) AS cant_total, MAX(c.cantidad) AS cant_max, MIN(c.cantidad) AS cant_min, AVG(c.cantidad) AS cant_prom
+                        FROM casos c
+                        INNER JOIN departamento d ON c.id_depto = d.id
+                        INNER JOIN provincia p ON p.id = d.id_provincia
+                        GROUP BY provincia, anio
+                        HAVING Provincia = 'Buenos Aires' AND  anio = '2019' 
+                      '''
+
+        imprimirEjercicio(consigna, [casos, departamento, provincia], consultaSQL)
 
 
-        # ARMO LA LISTA PARA CADA AÑO POR SEPARADO CON LA PROVINCIA Y EL DEPTO CON MAS CASOS DE ESE AÑO
+#-------------------------------------------------------------------------------------
 
-        depto_con_mas_casos_provincia_2019 = sql^ '''
-                                                SELECT provincia, departamento, MAX(cantidad_de_casos_total_2019) AS cantidad_casos
-                                                FROM cant_casos_depto_2019_prov 
-                                                GROUP BY provincia, departamento 
-                                                '''
-        print(depto_con_mas_casos_provincia_2019)
+    if entrada == '4j':
+
+        consigna = 'Misma consulta que el ítem anterior, pero sólo para aquellos casos en que la cantidad total es mayor a 1000 casos.'
 
 
+        consultaSQL = '''
+                        SELECT p.descripcion AS Provincia, SUM(c.cantidad) AS cant_total, MAX(c.cantidad) AS cant_max, MIN(c.cantidad) AS cant_min, AVG(c.cantidad) AS cant_prom
+                        FROM casos c
+                        INNER JOIN departamento d ON c.id_depto = d.id
+                        INNER JOIN provincia p ON p.id = d.id_provincia
+                        GROUP BY provincia, anio
+                        HAVING cant_total > 1000
+                      '''
+
+        imprimirEjercicio(consigna, [casos, departamento, provincia], consultaSQL)
 
 
+#-------------------------------------------------------------------------------------
 
+    if entrada == '4k':
 
+        consigna = '''Listar los nombres de departamento (y nombre de provincia) que tienen mediciones tanto para el año 2019 como para el año 2020. Para cada uno de
+        ellos devolver la cantidad de casos promedio. Ordenar por nombre de provincia (ascendente) y luego por nombre de departamento (ascendente).'''
 
-
-
-
-        # ESTA MAL NO ME SIRVE LO QUE HAGO ACA ABAJO
-        # armo df uniendo los df de 2019 y 2020, dejando nulls en los deptos que tengan casos en 2020 pero no en 2019
-
-        cant_casos_depto_2019_2020 = sql^ ''' 
-                                            SELECT c19.departamento, 
-                                            c19.cantidad_de_casos_total_2019, 
-                                            c20.cantidad_de_casos_total_2020 
-                                            FROM cant_casos_depto_2019 AS c19
-                                            RIGHT OUTER JOIN cant_casos_depto_2020 AS c20
-                                            ON c19.departamento = c20.departamento
-                                            '''
-                    
-
-
-
-
-
-
-
+        consultaSQL = '''
+                        SELECT p.descripcion AS Provincia, c.descripcion AS Departamento, c.promedio
+                        FROM (SELECT 
+                        
+                      '''
 
 
 
